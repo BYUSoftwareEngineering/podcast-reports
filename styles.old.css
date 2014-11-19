@@ -1,0 +1,66 @@
+html { background-color: #dddddd; }
+body { background: url("body-linen.png");
+		 		margin: 0px;
+	 	 }
+div.content { position: relative;
+				 			background-color: white;
+							width: 940px;
+							height: 100%;
+							padding-left: 103px;
+							padding-right: 103px;
+							margin: 0 auto;
+							box-shadow: 0 0 30px 0px rgba(222, 222, 222, 0.7);
+							overflow: hidden;
+							z-index: 2;
+						}
+#main-header { background: url("byu-header-bg.png") top left no-repeat;
+							 background-size: 100% 96px;
+							 position: relative;
+							 width: 100%;
+							 border-bottom: 1px solid #003366;
+							}
+#header-top { height: 96px;
+							margin: 0 auto;
+							max-width: 1008px;
+						}
+#header-top a { color: white;
+								text-decoration: none;
+							}
+#header-top h1 { font-family: "Sentinel SSm A", "Sentinel SSm B", "Sentinel A", "Sentinel B", "CreteRound", "Palatino", "DroidSerif", "Droid Serif", Georgia, serif;
+								 font-weight: 300;
+								 font-size: 2.2em;
+								 margin: .25em 4% .4em;
+							 }
+#logo a.byu { text-indent: -999em;
+							overflow: hidden;
+							background-repeat: no-repeat;
+							text-align: left;
+							direction: ltr;
+							display: inline-block;
+							height: 26px;
+							background: transparent url("//home.byu.edu/home/sites/default/files/global/img/byu-logo-header-sm.png") 0px 0px no-repeat;
+							background-image: url("//home.byu.edu/home/sites/default/files/global/img/byu-logo-header.svg");
+							width: 350px;
+							text-decoration: none;
+						}
+div.nav-container { position: relative;
+										width: 100%;
+										display: block;
+										min-height: 36px;
+										z-index: 5;
+										background-color: #001948;
+										border-top: 1px solid #114477;
+										border-bottom: 1px solid #336699;
+										box-shadow: 0 1px 10px rgba(0, 0, 0, 0.5);
+									}
+
+#page-footer { background-color: #dddddd;
+							 border-top: 1px solid #fff;
+							 margin-top: 1px;
+							 color: #666666;
+						 }
+#footer-bottom { width: 940px;
+								 margin: 0 auto;
+							 }
+#page-footer a { text-decoration: none; }
+#page-footer p { margin: 16px 125px; }
