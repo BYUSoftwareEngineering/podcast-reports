@@ -1,15 +1,25 @@
 function updatePodcastReport(btn) {
 	text = btn.innerHTML;
 	if (text == "Click when watched") {
+		var podcast_id = btn.getAttribute("id").substr(4);
 		$("#action").val("add-time");
-		$("#podcast-id").val(btn.getAttribute("id").substr(2));
+		$("#podcast-id").val(podcast_id);
+
+
+		var sel_id = '#sel_' + podcast_id;
+		var percent_read = -1;
+		if ($(sel_id).length) {
+			percent_read = $(sel_id).val();
+		}
+		$("#percent-read").val(percent_read);
+
 		$("#update-form").submit();
   }
 	else if (text == "Undo") {
-		var answer = confirm("Unmarking this action means you will not get credit for clicking the button before.");
+		var answer = confirm("Are you sure you want to delete this entry?");
 		if (answer) {
 			$("#action").val("delete-time");
-			$("#podcast-id").val(btn.getAttribute("id").substr(2));
+			$("#podcast-id").val(btn.getAttribute("id").substr(4));
 			$("#update-form").submit();
 		}
   }

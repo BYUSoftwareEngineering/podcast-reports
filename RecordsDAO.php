@@ -7,8 +7,9 @@ class RecordsDAO {
 	}
 	//-------------------------------------------------------------------
 	// Function to insert a record of a student watching a podcast
-	function addPodcastWatchedRecord($net_id, $podcast_id, $grade_week) {
-		$sql = "INSERT INTO `records`(`net_id`, `podcast_id`, `is_valid`, `grade_week`) VALUES ('$net_id',$podcast_id,'1','$grade_week')";
+	function addPodcastWatchedRecord($net_id, $podcast_id, $percent_read, $grade_week) {
+		$sql = "INSERT INTO `records`(`net_id`, `podcast_id`, `percent_read`, `is_valid`, `grade_week`) VALUES ('$net_id',$podcast_id,$percent_read,'1','$grade_week')";
+		// echo "<script>alert(\"$sql\");</script>";
 		return $this->mysqli->query($sql);
 	}
 	//---------------------------------------------------------

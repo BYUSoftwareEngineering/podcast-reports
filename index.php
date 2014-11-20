@@ -18,10 +18,10 @@
 <html>
 <?php require 'head.php'; ?>
 <body>
-	<?php echo $AUX_CONTENT; ?>
+	<?php displayAuxContent(); ?>
 	<?php require 'header.html'; ?>
 	<div class="content">
-			<?php echo $CONTENT; ?>
+			<?php displayContent();?>
 	</div>
 <?php require 'footer.html'; ?>
 </body>

@@ -48,10 +48,11 @@ class Database {
 	}
 	//-----------------------
 	function close($commit) {
-		if ($commit)
+		if ($commit) {
 			$this->mysqli->commit();
+		}
 		else {
-			echo "MySQL transaction failed: " + $this->getError();
+			echo $this->queryAlert('MySQL transaction failed: ' . $this->getError());
 			$this->mysqli->rollback();
 		}
 		$this->mysqli->close();
@@ -59,7 +60,7 @@ class Database {
 	}
 	//--------------------------
 	public function getError() {
-		return $this->mysqli->connect_error;
+		return $this->mysqli->info . '\n'. $this->mysqli->error;
 	}
 	
 	//---------------------------------------

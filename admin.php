@@ -70,59 +70,94 @@
 	}
 }
 
-	function configContent() {
+	function displayContent() {
 		global $CONTENT;
 		$db = new Database();
 		$studentsDAO = $db->getStudentsDAO();
 		$podcastsDAO = $db->getPodcastsDAO();
+		//==============================================================================================================
+		?>
 
-		$CONTENT .= '<form id="add-form" method="get" action="' . htmlspecialchars($_SERVER["PHP_SELF"]) . '">' . "\n";
-		$CONTENT .= '<input type="hidden" id="page" name="page" value="admin"></input>' . "\n";
-		$CONTENT .= '<input type="hidden" id="action" name="action"></input>' . "\n";
-		$CONTENT .= '<input type="hidden" id="update" name="update"  value="1"></input>' . "\n";
-		$CONTENT .= '<input type="hidden" id="values" name="values"></input>' . "\n";
-		$CONTENT .= '</form>' . "\n";
+<form id="add-form" method="get" action=<?php echo '"' . htmlspecialchars($_SERVER["PHP_SELF"]) . '"';?>>
+	<input type="hidden" id="page" name="page" value="admin"></input>
+	<input type="hidden" id="action" name="action"></input>
+	<input type="hidden" id="update" name="update"  value="1"></input>
+	<input type="hidden" id="values" name="values"></input>
+</form>
 
-		$CONTENT .= '<div class="center float-parent" style="width:50%">' . "\n";
-		$CONTENT .= '<div class="tables">' . "\n";
-		$CONTENT .= '<h3>Students</h3>' . "\n";
-		$CONTENT .= '<table><tbody>' . "\n";
-		$CONTENT .= '<tr><th>Net ID</th><th>Full Name</th></tr>' . "\n";
+<div class="center float-parent" style="width:50%">
+	<div class="tables">
+		<h3>Students</h3>
+		<table><tbody>
+			<tr><th>Net ID</th><th>Full Name</th></tr>
+
+		<?php
+		//--------------------------------------------------------------------------------------------------------------
 		$students_result = $studentsDAO->getAllStudents();
+		
 		while ($row = Database::getNextRow($students_result)) {
 			$net_id = $row['net_id'];
 			$full_name = $row['full_name'];
-			$CONTENT .= "<tr><td>$net_id</td><td>$full_name</td></tr>" . "\n";
+			//==========================================================================================================
+			?>
+
+			<tr><td><?php echo $net_id; ?></td><td><?php echo $full_name; ?></td></tr>
+
+			<?php
+			//----------------------------------------------------------------------------------------------------------
 		}
-		$CONTENT .= '</tbody></table>' . "\n";
-		$CONTENT .= '<button onclick="addStudents()">Add new student(s)</button>' . "\n";
-		$CONTENT .= '</div>' . "\n";
-		$CONTENT .= '<div class="tables">' . "\n";
-		$CONTENT .= '<h3>Podcasts</h3>' . "\n";
-		$CONTENT .= '<table><tbody>' . "\n";
-		$CONTENT .= '<tr><th>Podcast Name</th></tr>' . "\n";
+		//==============================================================================================================
+		?>
+
+		</tbody></table>
+		<button onclick="addStudents()">Add new student(s)</button>
+	</div>
+	<div class="tables">
+		<h3>Podcasts</h3>
+		<table><tbody>
+			<tr><th>Podcast Name</th></tr>
+
+		<?php
+		//--------------------------------------------------------------------------------------------------------------
 		$podcasts_result = $podcastsDAO->getAllPodcasts();
+		
 		while ($row = Database::getNextRow($podcasts_result)) {
 			$podcast_name = $row['podcast_name'];
-			$CONTENT .= "<tr><td>$podcast_name</td></tr>" . "\n";
+			//==========================================================================================================
+			?>
+
+			<tr><td><?php echo $podcast_name; ?></td></tr>
+
+			<?php
+			//----------------------------------------------------------------------------------------------------------
 		}
-		$CONTENT .= '</tbody></table>' . "\n";
-		$CONTENT .= '<button onclick="addPodcasts()">Add new podcast(s)</button>' . "\n";
-		$CONTENT .= '</div>' . "\n";
-		$CONTENT .= '</div>' . "\n";
+		//==============================================================================================================
+		?>
+
+		</tbody></table>
+		<button onclick="addPodcasts()">Add new podcast(s)</button>
+	</div>
+</div>
+
+		<?php
+		//--------------------------------------------------------------------------------------------------------------
 	}
 
-	function configAuxContent() {
-		global $AUX_CONTENT;
-		$AUX_CONTENT .= '	<style>
-												div.tables {
-													float: left;
-													margin: 25px;
-												}
-												h3 {
-													text-align: center;
-												}
-												</style>';
+	function displayAuxContent() {
+		//==============================================================================================================
+		?>
+<style>
+	div.tables {
+		float: left;
+		margin: 25px;
+	}
+	h3 {
+		text-align: center;
+	}
+</style>
+
+		<?php
+		//--------------------------------------------------------------------------------------------------------------
 	} 
 
 	$TITLE = 'Admin Page | ' . $TITLE;
@@ -130,8 +165,8 @@
 	if (isset($_GET['update'])) {
 		addToDatabase();
 	}
-	configContent();
-	configAuxContent();
+	// configContent();
+	// configAuxContent();
 ?>
 
 

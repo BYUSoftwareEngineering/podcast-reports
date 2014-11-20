@@ -52,6 +52,9 @@ div.content {
 	width: 350px;
 	text-decoration: none;
 }
+#logo h2 {
+	margin: 0 100px 0 0;
+}
 div.nav-container {
 	position: relative;
 	width: 100%;
