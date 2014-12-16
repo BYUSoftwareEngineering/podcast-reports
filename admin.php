@@ -1,5 +1,6 @@
 <?php
 	function addToDatabase() {
+		global $EXTRA_CONTENT;
 		$action = $_GET['action'];
 		$db = new Database();
 
@@ -38,7 +39,8 @@
 		}
 		else if ($action == "podcast") {
 			$podcastsDAO = &$db->getPodcastsDAO();
-			$podcasts = json_decode($_GET['values']);
+			$values = $_GET['values'];
+			$podcasts = json_decode($values);
 			$success = true;
 			$unsuccessful = array();
 
@@ -55,7 +57,7 @@
 
 			if ($success) {
 				$db->close(true);
-				echo '<script>alert("All podcasts were successfully added.")</script>';
+				$EXTRA_CONTENT .= '<script>alert("All podcasts were successfully added.")</script>';
 			}
 			else {
 				$db->close(false);
@@ -85,7 +87,7 @@
 	<input type="hidden" id="values" name="values"></input>
 </form>
 
-<div class="center float-parent" style="width:50%">
+<div class="center float-parent" style="width:75%">
 	<div class="tables">
 		<h3>Students</h3>
 		<table><tbody>
@@ -115,7 +117,7 @@
 	<div class="tables">
 		<h3>Podcasts</h3>
 		<table><tbody>
-			<tr><th>Podcast Name</th></tr>
+			<tr><th>Podcast Name</th><th>Has Read</th></tr>
 
 		<?php
 		//--------------------------------------------------------------------------------------------------------------

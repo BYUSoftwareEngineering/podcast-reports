@@ -36,7 +36,7 @@ function addStudents() {
 }
 
 function addPodcasts() {
-	var input = prompt("Please enter a comma-separated list of the names of the podcasts you would like to add", "podcast_1, podcast_2, podcast_3");
+	var input = prompt("Please enter comma-separated list of the names of the podcasts you would like to add", "podcast_1, podcast_2, podcast_3");
 	var podcasts = input.split(/\s*,\s*/);
 	var podcast_array = JSON.stringify(podcasts);
 	$("#action").val("podcast");

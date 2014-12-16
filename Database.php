@@ -69,22 +69,33 @@ class Database {
 		$result = $this->mysqli->query($sql);
 		return $this->getNextRow($result)['current_week'];
 	}
+	//---------------------------------------
+	public function getCurrentTimestamp() {
+		$sql = 'SELECT NOW() AS `current_ts`';
+		$result = $this->mysqli->query($sql);
+		return $this->getNextRow($result)['current_ts'];
+	}
 	//--------------------------------------------------------------
-	public function getCurrentGradeWeekFromBase($base_date) {
-		$sql = "SELECT WEEK('$base_date') AS `base_week`";
+	public function getGradeWeekFromTimestamp($ts) {
+		global $BASE_DATE;
+		
+		$sql = "SELECT WEEK('$BASE_DATE') AS `base_week`";
 		$result = $this->mysqli->query($sql);
 		$base_week = $this->getNextRow($result)['base_week'];
-		$current_week = $this->getCurrentWeek();
-		return $current_week > $base_week ? $current_week - $base_week : 0;
+		
+		$sql = "SELECT WEEK('$ts') AS `this_week`";
+		$result = $this->mysqli->query($sql);
+		$this_week = $this->getNextRow($result)['this_week'];
+
+		return $this_week > $base_week ? $this_week - $base_week : 0;
 	}
 	//------------------------------------------------
 	// Function to get the next grade week for a student
 	// This is necessary if a student watches more than one podcast in a week to make sure no grade week gets duplicated.
-	public function getNextGradeWeek($net_id) {
-		global $BASE_DATE;
-		$grade_week = $this->getCurrentGradeWeekFromBase($BASE_DATE) - 1;
-		while ($this->recordsDAO->existsPodcastWatchedRecordForStudentAndGradeWeek($net_id, ++$grade_week));
-		return $grade_week;
+	public function getNextGradeWeek($net_id, $start_week) {
+		$grade_week = $start_week;
+		while ($this->recordsDAO->existsPodcastWatchedRecordForStudentAndGradeWeek($net_id, $grade_week++));
+		return $grade_week - 1;
 	}
 }
 ?>

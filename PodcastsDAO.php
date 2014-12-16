@@ -22,13 +22,14 @@ class PodcastsDAO {
 	//------------------------------------
 	// Function to take podcast id and return corresponding podcast name from database
 	function getPodcastName($podcast_id) {
+		$podcast_id = $this->mysqli->real_escape_string($podcast_id);
 		$sql = "SELECT `podcast_name` FROM `podcasts` WHERE `podcast_id`='$podcast_id'";
 		$result = $this->mysqli->query($sql);
 		return Database::getNextRow($result)['podcast_name'];
 	}
 	//-------------------------
 	function getAllPodcasts() {
-		$sql = 'SELECT * FROM `podcasts`';
+		$sql = 'SELECT * FROM `podcasts` ORDER BY `podcast_name` ASC';
 		return $this->mysqli->query($sql);
 	}
 	//------------------------------

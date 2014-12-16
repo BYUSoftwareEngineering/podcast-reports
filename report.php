@@ -2,11 +2,35 @@
 	// ---------------------------------------------------------------------------------------------------------------------
 	// Transaction Functions -----------------------------------------------------------------------------------------------
 	// ---------------------------------------------------------------------------------------------------------------------
-	function updateGradeWeeks($net_id) {
-		// For right now, the added value of this function isn't worth the cost of implementing it
+	function reloadPage() {
+		global $NET_ID, $FULL_NAME;
+		?>
+<form id="reload-page" method="get" action=<?php echo '"' . htmlspecialchars($_SERVER["PHP_SELF"]) . '"';?>>
+	<input type="hidden" id="page" name="page" value="report"></input>
+	<input type="hidden" id="netId" name="netId" value=<?php echo '"' . $NET_ID . '"'; ?>></input>
+	<input type="hidden" id="fullName" name="fullName" value=<?php echo '"' . $FULL_NAME . '"'?>></input>
+</form>
+<script>
+	document.getElementById("reload-page").submit();
+</script>
+		<?php
 	}
-	function updateDatabase() {
+	function updateGradeWeeks($db, $recordsDAO) {
 		global $NET_ID;
+		$timestamps = $recordsDAO->getValidTimestamps($NET_ID);
+		$recordsDAO->clearGradeWeeks($NET_ID);
+		// For each valid timestamp
+		foreach ($timestamps as $ts) {
+			$actual_week = $db->getGradeWeekFromTimestamp($ts);
+			$grade_week = $db->getNextGradeWeek($NET_ID, $actual_week);
+			$recordsDAO->setGradeWeekForTimestamp($NET_ID, $ts, $grade_week);
+		}
+
+		return;
+	}
+	//-------------------------
+	function updateDatabase() {
+		global $NET_ID, $EXTRA_CONTENT, $BASE_DATE;
 		$action = $_GET['action'];
 		$podcast_id = $_GET['podcast-id'];
 		$success = true;
@@ -15,21 +39,40 @@
 
 		$result = $recordsDAO->getPodcastSpecificValidPodcastWatchedRecord($NET_ID, $podcast_id);
 		$result_size = $db->getNumRows($result);
-		$grade_week = $db->getNextGradeWeek($NET_ID);
+
 		if (($action == "add-time") && ($result_size == 0)) {
 			$percent_read = $_GET['percent-read'];
 
-			$success = $recordsDAO->addPodcastWatchedRecord($NET_ID, $podcast_id, $percent_read, $grade_week);
+			if ($percent_read == '100'
+				|| $percent_read == '90'
+				|| $percent_read == '80'
+				|| $percent_read == '70'
+				|| $percent_read == '60'
+				|| $percent_read == '50'
+				|| $percent_read == '40'
+				|| $percent_read == '30'
+				|| $percent_read == '20'
+				|| $percent_read == '10'
+				|| $percent_read == '0'
+				|| $percent_read == '-1') {
+				$success = $recordsDAO->addPodcastWatchedRecord($NET_ID, $podcast_id, $percent_read);
+				updateGradeWeeks($db, $recordsDAO);
+			}
+			else {
+				echo '<script>alert("You must select a value for \'reading completed\' from the drop-down menu.");</script>';
+			}
 		}
 		else if ($action == "delete-time") {
 			if ($result_size == 1) {
 				$success = $recordsDAO->deletePodcastWatchedRecord($NET_ID, $podcast_id);
-				//updateGradeWeeks($NET_ID);
+				updateGradeWeeks($db, $recordsDAO);
 			}
-			else if ($result_size > 1)
+			else if ($result_size > 1) {
 				echo "<script> alert('ERROR: Unable to delete entry. Multiple valid entries for $NET_ID and podcast #$podcast_id. Please contact the TAs to get the problem fixed.'); </script>";
-			else // result_size must be 0
+			}
+			else {// result_size must be 0
 				echo "<script> alert('ERROR: Unable to delete entry. No valid entries for $NET_ID and podcast #$podcast_id'); </script>";
+			}
 		}
 		if ($success) {
 			$db->close(true);
@@ -37,8 +80,117 @@
 		else {
 			$db->close(false);
 		}
+
+		reloadPage();
+		exit();
 	}
-	// Function to configure the podcast information to be displayed
+	// Creates the rows of the times table *****************************************************************************
+	function createTimesTable($student_result, $has_reading, &$watched) {
+		$times_table = '';
+		// For each time the student has reported watching this podcast
+		while ($times_row = Database::getNextRow($student_result)) {
+			$strike_before = "<del>";
+			$strike_after = "</del>";
+			$percent_read = $times_row['percent_read'] . '%';
+			// Does this podcast have a reading associated with it?
+			if (!$has_reading) {
+				$percent_read = "No reading required";
+			}
+			// Is this time watched the valid one?
+			if ($times_row['is_valid']) {
+				$watched = true;
+				$strike_before = $strike_after = "";
+			}
+			// Print the timestamp
+			$times_table .= '<tr><td>' . $strike_before . $times_row['time'] . $strike_after . '</td>';
+			// Is the credit week greater than 0?
+			if ($times_row['grade_week'] != '0') {
+				$times_table .= '<td>Week ' . $times_row['grade_week'] . '</td>';
+			}
+			else {
+				$color = '';
+				if (!$watched) {
+					$color = ' style="color: red"';
+				}
+				$times_table .= '<td' . $color . '>No credit earned</td>';
+			}
+			$times_table .= '<td>' . $strike_before . $percent_read . $strike_after . '</td>';
+			// Close the row for this time the podcast was watched
+			$times_table .= '</tr>' . "\n";
+		}
+		return $times_table;
+	}
+	// Displays the Percent Read drop-down *****************************************************************************
+	function displayPercentReadDropDown($sel_id, $has_reading) {
+		if ($has_reading) {
+		//==============================================================================================================
+		?>
+		<select <?php echo "id=\"$sel_id\""; ?>>
+			<option value="100">100%</option>
+			<option value="90">90%</option>
+			<option value="80">80%</option>
+			<option value="70">70%</option>
+			<option value="60">60%</option>
+			<option value="50">50%</option>
+			<option value="40">40%</option>
+			<option value="30">30%</option>
+			<option value="20">20%</option>
+			<option value="10">10%</option>
+			<option value="0">0%</option>
+			<option value="-" selected>-</option>
+		</select>
+		<?php
+		//--------------------------------------------------------------------------------------------------------------
+		}
+		else {
+			echo 'No reading required';
+		}
+	}
+	// Displays the Weekly Summary table *******************************************************************************
+	function displayWeeklySummaryTable(&$db, &$recordsDAO, &$podcastsDAO) {
+		global $NET_ID, $BASE_DATE;
+
+		$current_ts = $db->getCurrentTimestamp();
+		$current_week = $db->getGradeWeekFromTimestamp($current_ts);
+		//==============================================================================================================
+		?>
+<div id="grade-week-summary">
+	<h2>Weekly Summary:</h2>
+	<table><tbody>
+		<tr><th>Week</th><th>Podcast Watched</th><th>Reading Completed</th></tr>
+		<?php
+		//--------------------------------------------------------------------------------------------------------------
+		for ($grade_week = 1; $grade_week <= 16; $grade_week++) {
+			$result = $recordsDAO->getGradeWeekSpecificPodcastWatchedRecord($NET_ID, $grade_week);
+			$podcast_id = $podcast_name = $percent_read = '';
+			// Is there a record for this week?
+			if ($row = Database::getNextRow($result)) {
+				$podcast_id = $row['podcast_id'];
+				$podcast_name = $podcastsDAO->getPodcastName($podcast_id);
+				$percent_read = $row['percent_read'];
+				$percent_read = ($percent_read == '' ? '' : ($percent_read == -1 ? 'No reading required' : $percent_read . '%'));
+			}
+			// If there is no record for this grade week, has this grade week already passed?
+			else if ($grade_week < $current_week) {
+				$podcast_name = 'No podcast watched';
+				$percent_read = '-';
+			}
+
+			$is_current_week = '';
+			if ($grade_week == $current_week) {
+				$is_current_week = '*';
+			}
+			echo '<tr><td class="text-center">' . $is_current_week . $grade_week . $is_current_week . ' </td><td>' . $podcast_name . ' </td><td>' . $percent_read . '</td></tr>' . "\n";
+		}
+		//==============================================================================================================
+		?>
+	</tbody></table>
+	<i style="margin-left: 50px; font-style: normal">* current week</i>
+</div>
+		<?php
+		//--------------------------------------------------------------------------------------------------------------
+	}
+	// Function to configure the podcast information to be displayed ***************************************************
 	function displayContent() {
 		global $NET_ID, $FULL_NAME, $BASE_DATE;
 		$db = new Database();
@@ -79,59 +231,40 @@
 				$div_txt = 'You have <b style="color: red">NOT</b> watched this podcast yet.';
 				$student_result = $recordsDAO->getAllRecordsForStudentAndPodcast($NET_ID, $podcast_id, 'DESC');
 				$times_table = '<table><tbody>' . "\n";
-				$times_table .= '<tr><th>Time Completed</th><th>Credit Earned for</th></tr>' . "\n";
+				$times_table .= '<tr><th>Time Completed</th><th>Credit Earned for</th>';
+				$times_table .= '<th>Reading Completed</th>';
+				// Close the header row
+				$times_table .= '</tr>' . "\n";
+				// If there are records for this student and podcast
 				if ($student_result) {
-					while ($times_row = Database::getNextRow($student_result)) {
-						$strike_before = "<del>";
-						$strike_after = "</del>";
-						if ($times_row['is_valid']) {
-							$watched = true;
-							$strike_before = $strike_after = "";
-						}
-						$times_table .= '<tr><td>' . $strike_before . $times_row['time'] . $strike_after . '</td>';
-						if ($times_row['grade_week'] != '0')
-							$times_table .= '<td>Week ' . $times_row['grade_week'] . '</td>';
-						else
-							$times_table .= '<td>N/A</td>';
-						$times_table .= '</tr>' . "\n";
-					}
+					$times_table .= createTimesTable($student_result, $has_reading, $watched);
 				}
+
 				$times_table .= '</table></tbody>' . "\n";
+				// Has this podcast been watched?
 				if ($watched) {
 					$btn_txt = 'Undo';
 					$div_txt = 'You have watched this podcast.';
-					$div_color = ' style="color:#ccc"';
+					$div_color = ' style="color:#aaa"';
+
 				}
 				//======================================================================================================
 				?>
 
 	<div <?php echo $div_color; ?>>
-		<div class="box"><b><?php echo $podcast_name; ?>:</b></div>
+		<h2 class="podcast-title"><?php echo $podcast_name; ?>:</h2>
 		<div class="div-txt"><?php echo $div_txt; ?></div>
 		<button type="button" <?php echo "id=\"$btn_id\""; ?> onclick="updatePodcastReport(this);"><?php echo $btn_txt; ?></button>
 
-				<?php 
-				//------------------------------------------------------------------------------------------------------
-				if ($has_reading) {
-					//==================================================================================================
-				?>
-		Percentage of reading completed:
-		<select <?php echo "id=\"$sel_id\""; ?>>
-			<option value="100">100%</option>
-			<option value="90">90%</option>
-			<option value="80">80%</option>
-			<option value="70">70%</option>
-			<option value="60">60%</option>
-			<option value="50">50%</option>
-			<option value="40">40%</option>
-			<option value="30">30%</option>
-			<option value="20">20%</option>
-			<option value="10">10%</option>
-			<option value="0">0%</option>
-		</select>
+
 				<?php
 				//------------------------------------------------------------------------------------------------------
+				// Has this podcast been watched?
+				if (!$watched) {
+					echo "<b>Reading completed: </b>";
+					displayPercentReadDropDown($sel_id, $has_reading);
 				}
+
 				echo $times_table;
 				//======================================================================================================
 				?>
@@ -142,42 +275,19 @@
 			//==========================================================================================================
 			?>
 </div>
-<div id="grade-week-summary">
-	<div><b>Weekly Summary:</b></div><br>
-	<table><tbody>
-			<?php 
-			//----------------------------------------------------------------------------------------------------------
-			for ($grade_week = 1; $grade_week <= 14; $grade_week++) { 
-				$result = $recordsDAO->getGradeWeekSpecificPodcastWatchedRecord($NET_ID, $grade_week);
-				$podcast_id = Database::getNextRow($result)['podcast_id'];
-				$podcast_name	= $podcastsDAO->getPodcastName($podcast_id);
-				$tr_color = '';
-				if ($podcast_name != '') {
-					$tr_color = ' style="color:#ccc"';
-				}
-				if ($podcast_name == '' && $grade_week == $db->getCurrentGradeWeekFromBase($BASE_DATE)) {
-					$podcast_name = '(current week)';
-				}
-				echo '<tr' . $tr_color . '><td>Week ' . $grade_week . ' -</td><td>' . $podcast_name . '</td></tr>' . "\n";
-			}
-			//==========================================================================================================
-			?>
-
-	</tbody></table>
-	</div>
-
 			<?php
 			//----------------------------------------------------------------------------------------------------------
+			displayWeeklySummaryTable($db, $recordsDAO, $podcastsDAO);
 		}
 		else {
 			//==========================================================================================================
 			?>
 
 <br><b>Sorry, our records do not show you registered for this course.<br>
-If you would like to be added, please send an email to 
-<a href='mailto:byu.software.engineering@gmail.com'>byu.software.engineering@gmail.com</a> 
+If you would like to be added, please send an email to
+<a href='mailto:byu.software.engineering@gmail.com'>byu.software.engineering@gmail.com</a>
 and we will add you to the course. Thank you.</b><br><br>
-			
+
 			<?php
 		}
 		$db->close(true);
@@ -195,9 +305,6 @@ and we will add you to the course. Thank you.</b><br><br>
 	}
 	table {
 		margin-left: 50px;
-	}
-	b {
-		font-size: 125%;
 	}
 </style>
 
@@ -229,14 +336,3 @@ and we will add you to the course. Thank you.</b><br><br>
 	// configAuxContent();
 	checkName();
 ?>
-	
-
-
-
-
-
-
-
-
-
-
